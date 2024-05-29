@@ -71,9 +71,7 @@ var products = [
 
 // Improved version of cartList. Cart is an array of products (objects), but each one has a quantity field to define its quantity, so these products are not repeated.
 var cart = [];
-
 var total = 0;
-
 
 // Exercise 1
 function buy(id) {
@@ -82,7 +80,6 @@ function buy(id) {
     let indexProducts = products.findIndex(product => product.id === id)
     let productSelected = products[indexProducts]
     let indexCart = cart.findIndex(cartElement => cartElement.id === productSelected.id)
-    // console.log(indexCart)
     if(indexCart === -1){
         productSelected["quantity"] = 1
         productSelected["subtotalWithDiscount"] = productSelected.price
@@ -90,66 +87,66 @@ function buy(id) {
         console.log(cart)
     
     }else{
-        cart[indexCart].quantity++
-        productSelected.subtotalWithDiscount = parseFloat(productSelected.price * productSelected.quantity)
+        cart[indexCart].quantity = cart[indexCart].quantity + 1  // agrego propiedad cantidad con valor 1
+        cart[indexCart].subtotalWithDiscount = cart[indexCart].price * cart[indexCart].quantity // agrego propiedad subtotalWithDiscount que sera el subtotal de cada producto
 
         console.log(cart)
     }
- 
-    
+    applyPromotionsCart()  
+    calculateTotal()
+    contadorProductos()
 }
 
 // Exercise 2
 function cleanCart() {
     cart.length = 0
+    total = 0
     console.log(cart)
+    printCart()
 }
-// cleanCart()
 
 // Exercise 3
 function calculateTotal() {
-    // Calculate total price of the cart using the "cartList" array   
-    applyPromotionsCart()
-
+    // Calculate total price of the cart using the "cartList" array 
+    total = 0
+   
     for (let i = 0; i < cart.length; i++){
+        cart[i].subtotalWithDiscount = cart[i].price * cart[i].quantity
         total += cart[i].subtotalWithDiscount
     }
     console.log(total)
 }
 
 // Exercise 4
-function applyPromotionsCart(cart) {
+function applyPromotionsCart() {
     // Apply promotions to each item in the array "cart"
+
     let indexId1 = cart.findIndex(element => element.id === 1)
-    // console.log(indexId1)
+
     if(indexId1 != -1 && cart[indexId1].quantity >= 3){
-        cart[indexId1].price = parseFloat(cart[indexId1].price - (cart[indexId1].price * 0.2)) 
-        cart[indexId1].subtotalWithDiscount = parseFloat(cart[indexId1].price * cart[indexId1].quantity) 
+        cart[indexId1].price = 10.5 * 0.8
         console.log(cart)
+    }else if (indexId1 != -1 && cart[indexId1].quantity < 3){
+        cart[indexId1].price = 10.5
     }
 
     let indexId3 = cart.findIndex(element => element.id === 3)
-    // console.log(indexId3)
+
     if(indexId3 != -1 && cart[indexId3].quantity >= 10){
-        cart[indexId3].price = parseFloat(cart[indexId3].price - (cart[indexId3].price * 0.3)) // le hago y modifico un 20% en el precio del array cart 
-        cart[indexId3].subtotalWithDiscount = parseFloat(cart[indexId3].price * cart[indexId3].quantity) 
+        cart[indexId3].price = 5 * 0.7
         console.log (cart)
+    }else if (indexId3 != -1 && cart[indexId3].quantity < 10){
+        cart[indexId3].price = 5
     }
-
-    return cart
-
-    // el precio del array cart lo modifico un 20%  o 30 % si cumple condicion
-    // añado propiedad  subtotalWithDiscount donde se indica precio subtotal de los producto con descuento
 }
-
 
 
 // Exercise 5
 function printCart() {
     // Fill the shopping cart modal manipulating the shopping cart dom
-    const cartModal = document.getElementById("cartModal")
-    cartModal.innerHTML = " "
 
+    const cartModal = document.getElementById("cartModal")
+    // cartModal.innerHTML = " "
     cartModal.innerHTML = `
             <div class="modal-dialog">
             <div class="modal-content">
@@ -167,6 +164,7 @@ function printCart() {
                                 <th scope="col">Price</th>
                                 <th scope="col">Qty.</th>
                                 <th scope="col">Total <small>(with discount)</small></th>
+                                <th scope="col">Delete</th>
                             </tr>
                         </thead>
                         <tbody id="cart_list"> 							
@@ -183,29 +181,36 @@ function printCart() {
                 </div>
             </div>`
 
-    const updatedCart = applyPromotionsCart(cart)
     const cartList = document.getElementById("cart_list")
-    let total = 0
+   
 
-    for (let i = 0; i < updatedCart.length; i++) {
-        const product = updatedCart[i]
+    for (let i = 0; i < cart.length; i++) {
+        const product = cart[i]
         const row = document.createElement("tr");
         row.innerHTML = `
             <tr> 
             <th scope="row">${product.name}</th>
-            <td>${product.price}</td>
+            <td>${product.price.toFixed(2)}</td>
             <td>${product.quantity}</td>
-            <td>${product.subtotalWithDiscount}</td> 
+            <td>${product.subtotalWithDiscount.toFixed(2)}</td> 
+            <td><button onclick="removeFromCart(${product.id})">-</button></td> 
             </tr>            
             `
         cartList.appendChild(row);
-        total += product.subtotalWithDiscount
     }
-    const totalPriceContainer = document.getElementById("total_price_container");
-    totalPriceContainer.innerHTML = `Total: $${total.toFixed(2)}`
+    document.getElementById("total_price_container").innerHTML = `Total: $${total.toFixed(2)}`
 }
+    
 
 
+function contadorProductos(){     
+    let totalProductosCart = 0
+    for (let i = 0; i < cart.length; i++){
+        totalProductosCart += cart[i].quantity
+    }
+    const count_product = document.getElementById("count_product")  
+    count_product.textContent = totalProductosCart.toString()   
+}
 
 
 
@@ -213,9 +218,21 @@ function printCart() {
 // ** Nivell II **
 
 // Exercise 7
-function removeFromCart(id) {
+function removeFromCart(id) {    
+    
+    const index = cart.findIndex(product => product.id === id)
 
-}
+    if (cart[index].quantity == 1 ) {            
+        cart.splice(index, 1)
+    }else{
+        cart[index].quantity = cart[index].quantity - 1
+    }
+    applyPromotionsCart()
+    calculateTotal()
+    contadorProductos()
+    printCart()
+}  
+      
 
 function open_modal() {
     printCart();
